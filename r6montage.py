@@ -7,7 +7,7 @@ import subprocess
 import ffmpeg 
 import tempfile 
 
-clip_path = r"C:\Users\David Da Masta\Videos\Radeon ReLive\Tom Clancy's Rainbow Six Siege\Tom Clancy's Rainbow Six Siege_2025.06.26-03.27.mp4"     #stores the clip is located
+clip_path = r"VIDEO PATH HERE"     #stores the clip is located
 clip = cv2.VideoCapture(clip_path)    #gets the actual clip 
 print(f"Checking file: {clip_path}")
 print(f"File exists: {os.path.exists(clip_path)}")
