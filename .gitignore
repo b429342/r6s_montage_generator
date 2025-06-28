@@ -209,7 +209,7 @@ __marimo__/
 
 # Ignore folders
 extractedFrames/
-
+extractedText/
 # Ignore file
 kill_times.txt
 extractedText.txt
