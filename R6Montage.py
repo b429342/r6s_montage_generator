@@ -4,10 +4,11 @@ import matplotlib.pyplot as plt                     #'as' helps us shorten the n
 import pytesseract                         #used to extract text
 import numpy as np
 import subprocess
-import ffmpeg 
 import tempfile 
 
+
 clip_path = r"VIDEO PATH HERE"     #stores the clip is located
+clip_path = r"C:\Users\David Da Masta\Videos\Radeon ReLive\Tom Clancy's Rainbow Six Siege\Tom Clancy's Rainbow Six Siege_2025.06.30-04.19.mp4"     #stores the clip is located
 clip = cv2.VideoCapture(clip_path)    #gets the actual clip 
 print(f"Checking file: {clip_path}")
 print(f"File exists: {os.path.exists(clip_path)}")
@@ -30,6 +31,7 @@ def makeFolders():                  #COMMENT OUT THE CREATION OF FOLDERS THAT AR
 
 
 def getFrames(clip, framesFolder, textFile, killFeed):       #method to get frames from a clip. Takes in the clip and all the needed folders and files
+    print("Starting frame extraciton.")
     killtimeslist = []
     currentframe = 0                                       #makes sure it starts at the first frame
     x_start, y_start, x_end, y_end = 1450, 200, 1700, 335  #cords for the killfeed
@@ -39,6 +41,7 @@ def getFrames(clip, framesFolder, textFile, killFeed):       #method to get fram
     skip_frames = int(fps * skip_seconds)
 
     while currentframe<total_frames:                                     #Makes sure loop stops when video is over. 
+        
         clip.set(cv2.CAP_PROP_POS_FRAMES, currentframe)           #sets clip to next frame     
 
         ret, frame = clip.read()                           #tries to read next frame
@@ -76,9 +79,8 @@ def getFrames(clip, framesFolder, textFile, killFeed):       #method to get fram
             break                                                         #when no more frames to read it stops. 
 
     clip.release()
-    print("frames saved.")
+    print("Frame extraction done.")
     return killtimeslist                                                #list is made inside this function so for it to be used elsewhere it needs to be returned. 
-
 
 def getClips(video_path, killtimeslist, clips_folder):        #IF CLIPS AREN'T DELETED THEN IT NO WORK!!!!
     print("extracting clips")
@@ -94,11 +96,14 @@ def getClips(video_path, killtimeslist, clips_folder):        #IF CLIPS AREN'T D
         output = os.path.join(clips_folder, clipname)  #names the clip and makes sure it goes to the clips folder
         listofclips.append(output) 
 
-        subprocess.run(['ffmpeg', '-i', video_path, '-ss', start_Clip, '-to', end_clip, '-c:v', 'copy', '-c:a', 'copy', output], capture_output=True, text=True)
-
+        subprocess.run(['ffmpeg', '-i', video_path, '-ss', start_Clip, '-to', end_clip, '-c:v', 'libx264', '-preset', 'fast','-crf', '22', '-g', '30',
+                        '-keyint_min', '30','-force_key_frames', 'expr:gte(n,0)', '-x264opts', 'no-scenecut', 
+                         '-vsync','cfr','-c:a', 'aac', '-b:a', '192k', output]
+                        , capture_output=True, text=True)
         i+=1        #adding 1 to i
     print("clips done.")
     return listofclips                                  #Lets us use this list in our appending function
+
 
 def concatClips(listofclips):
     print("Concating clips...")
@@ -108,7 +113,7 @@ def concatClips(listofclips):
         temp.writelines(f"file '{absolutepath}'\n") 
     temp.flush()
     temp.close() 
-    subprocess.run(['ffmpeg', '-f', 'concat', '-safe' ,'0', '-i', temp.name, '-c' ,'copy' ,'outputConcat.mp4'])        #concat all the clips in the temp file. 
+    subprocess.run(['ffmpeg', '-f', 'concat', '-safe' ,'0', '-i', temp.name, '-c' ,'copy' ,'outputConcat.mp4'])     #concat all the clips in the temp file while also re-encoding
     os.remove(temp.name)
     print("Done concating")
     return
@@ -119,6 +124,9 @@ player_name = getplayername()
 killtimeslist= getFrames(clip, framesFolder, textFile, killFeed) 
 
 listofclips = getClips(clip_path, killtimeslist, clipsFolder)
+
+
+
 
 answer= input('Would you like to concat the clips? Y/N:').strip().lower()   #see if user wants to concat
 if answer == 'y':
